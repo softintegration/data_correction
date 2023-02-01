@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+        <record id="data_correction_view_form" model="ir.ui.view">
+            <field name="name">Data Correction</field>
+            <field name="model">data.correction</field>
+            <field name="arch" type="xml">
+                <form string="Correction">
+                    <header>
+                        <button name="action_append_correction"
+                                type="object"
+                                string="Append correction"
+                                class="oe_highlight"
+                                states="done"/>
+                        <button name="action_cancel_append"
+                                type="object"
+                                string="Cancel appended state"
+                                attrs="{'invisible':['|',('state','!=','draft'),('appended','=',False)]}"/>
+                        <button name="sql_query_elements_data"
+                                type="object"
+                                string="_DELETE LINK"
+                                class="btn-success"
+                                attrs="{'invisible':['|','|','|',('state','!=','draft'),('correction_type','!=','sql'),('sql_query_type','not in',('delete_link',)),('object_id','=',False)]}"/>
+                        <button name="sql_query_elements_data"
+                                type="object"
+                                string="_INSERT DATA"
+                                class="btn-success"
+                                attrs="{'invisible':['|','|','|',('state','!=','draft'),('correction_type','!=','sql'),('sql_query_type','not in',('insert','insert_link')),('object_id','=',False)]}"/>
+                        <!--<button name="apply_recalculate_method"
+                                type="object"
+                                string="_APPLY RECALCULATE METHOD"
+                                class="btn btn-warning"
+                                attrs="{'invisible':['|',('is_computed_field','=',False),('correction_line_ids_count','=',0)]}"/>-->
+                        <button type="object" name="import_correction_file"
+                            string="_IMPORT CORRECTION LINES"
+                            class="btn-success"
+                            attrs="{'invisible':['|',('state','!=','draft'),('data','=',False)]}"
+                        />
+
+                        <button name="apply_correction" string="_Apply correction"
+                                attrs="{'invisible':['|','|',('state','!=','draft'),'&amp;',('correction_line_ids_count','=',0),('apply_on','=','record'),'&amp;',('constraint_name','=',False),('apply_on','=','constraint')]}"
+                                type="object" class="btn-primary"/>
+
+                        <!--<button type="object" name="select_correction_lines"
+                                string="SELECT CORRECTION LINES"
+                                class="btn-success"
+                                attrs="{'invisible':['|','|','|',('correction_type','!=','rules'),('object_id','=',False),('attr_type','=',False),'&amp;','&amp;',('action_type','=','update'),('field_id','=',False),('function_field_id','=',False)]}"
+                        />-->
+                        <button type="object" name="select_correction_lines"
+                                string="SELECT CORRECTION LINES"
+                                class="btn-success"
+                                attrs="{'invisible':['|','|','|','|',('state','!=','draft'),('correction_type','!=','rules'),('object_id','=',False),'&amp;',('action_type','!=','delete'),('attr_type','=',False),'&amp;','&amp;',('action_type','=','update'),('field_id','=',False),('function_id','=',False)]}"
+                        />
+                        <field name="state" widget="statusbar" statusbar_visible="draft,done"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="open_correction_ids"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-list">
+                                <field name="correction_ids_count" widget="statinfo" string="Corrections"/>
+                            </button>
+                        </div>
+                        <group>
+                            <field name="appended" invisible="1"/>
+                            <field name="correction_class" invisible="1"/>
+                            <label for="correction_key" attrs="{'invisible':[('correction_class','=','append')]}"/>
+                            <div class="oe_inline" attrs="{'invisible':[('correction_class','=','append')]}">
+                                <field name="correction_key_print" readonly="1"/>
+                                <p class="text-muted">
+                                    <strong>Important : </strong>You must keep this password in order to be able to undo the corrections.
+                                </p>
+                                <field name="correction_note"
+                                       required="1"
+                                       attrs="{'readonly':['|',('state','!=','draft'),('appended','=',True)]}"
+                                       placeholder="Write something related to this correction here..."
+                                       help="Write here the motif of correction or related information to simplify the search for it."/>
+                            </div>
+                            <field name="correction_key" invisible="1"/>
+                            <field name="correction_type" widget="radio" attrs="{'invisible':[('state','!=','draft')]}"/>
+                            <field name="contact_id" required="1" attrs="{'invisible':['|',('state','!=','draft'),('correction_class','=','append')]}"/>
+                            <field name="action_type" widget="radio"
+                                   attrs="{'invisible':['|',('state','!=','draft'),('correction_type','!=','rules')],'required':[('correction_type','=','rules')]}"/>
+                            <field name="sql_query_type"
+                                   attrs="{'invisible':['|',('state','!=','draft'),('correction_type','!=','sql')],'required':[('correction_type','=','sql')]}"
+                                   widget="radio"/>
+                            <label for="object_id" attrs="{'invisible':[('state','!=','draft')]}"/>
+                            <div attrs="{'invisible':[('state','!=','draft')]}">
+                                <field name="object_id" options="{'no_create':True,'no_open':True}"/>
+                                <field name="object_to_correct" attrs="{'invisible':[('object_id','=',False)]}"/>
+                            </div>
+                            <field name="apply_on"
+                                   widget="radio"
+                                   attrs="{'invisible':['|',('state','!=','draft'),('action_type','!=','delete')]}"
+                            />
+                            <field name="constraint_name" attrs="{'invisible':['|',('state','!=','draft'),('apply_on','!=','constraint')],'required':[('apply_on','=','constraint')]}"/>
+                            <field name="attr_type" attrs="{'invisible':['|','|',('state','!=','draft'),('object_id','=',False),('action_type','!=','update')],'required':[('object_id','!=',False),('action_type','=','update')]}" />
+                            <field name="function_id" attrs="{'invisible':['|','|','|',('state','!=','draft'),('object_id','=',False),('attr_type','!=','function'),('action_type','!=','update')],'required':[('attr_type','=','function'),('object_id','!=',False),('action_type','=','update')]}"/>
+                            <!--<field name="function_field_id" options="{'no_create':True,'no_open':True}"
+                                        attrs="{'invisible':['|','|',('object_id','=',False),('action_type','!=','update'),('attr_type','!=','function')],'required':[('attr_type','=','function'),('action_type','=','update'),('object_id','!=',False)]}"/>
+                            -->
+                            <label for="linked_field_data_source" attrs="{'invisible':['|','|',('state','!=','draft'),('object_id','=',False),('sql_query_type','not in',('insert_link','delete_link'))]}"/>
+                            <div attrs="{'invisible':['|','|',('state','!=','draft'),('object_id','=',False),('sql_query_type','not in',('insert_link','delete_link'))]}">
+                                 <field name="linked_field_data_source"
+                                        attrs="{'required':[('object_id','!=',False),('sql_query_type','in',('insert_link','delete_link'))]}"
+                                 />
+                            </div>
+                            <label for="linked_field_id" attrs="{'invisible':['|','|',('state','!=','draft'),('object_id','=',False),('sql_query_type','not in',('insert_link','delete_link'))]}"/>
+                            <div attrs="{'invisible':['|','|',('state','!=','draft'),('object_id','=',False),('sql_query_type','not in',('insert_link','delete_link'))]}">
+                                 <field name="linked_field_id"
+                                        domain = "[('model','=',object_to_correct),('ttype','=','many2many')]"
+                                        options="{'no_create':True,'no_open':True}"
+                                        attrs="{'required':[('sql_query_type','in',('insert_link','delete_link'))]}"/>
+                            </div>
+                            <label for="linked_field_data" attrs="{'invisible':['|','|',('state','!=','draft'),('linked_field_id','=',False),('sql_query_type','not in',('insert_link','delete_link'))]}"/>
+                            <div attrs="{'invisible':['|','|',('state','!=','draft'),('linked_field_id','=',False),('sql_query_type','not in',('insert_link','delete_link'))]}">
+                                 <field name="linked_field_data"
+                                        attrs="{'required':[('sql_query_type','in',('insert_link','delete_link'))]}"
+                                 />
+                            </div>
+                            <label for="field_id"
+                                   attrs="{'invisible':['|','|','|','|',('state','!=','draft'),('object_id','=',False),('correction_type','not in',('rules','file')),('action_type','!=','update'),('attr_type','!=','field')]}"/>
+                            <div
+                                 attrs="{'invisible':['|','|','|','|',('state','!=','draft'),('object_id','=',False),('correction_type','not in',('rules','file')),('action_type','!=','update'),('attr_type','!=','field')]}">
+                                 <field name="field_id" options="{'no_create':True,'no_open':True}" attrs="{'required':[('correction_type','in',('rules','file')),('action_type','=','update'),('attr_type','=','field')]}"/>
+                                 <field name="field_to_correct" attrs="{'invisible':[('field_id','=',False)]}"/>
+                                 <field name="field_to_correct_type" invisible="1"/>
+                            </div>
+                            <field name="fields_to_show" widget="many2many_tags"
+                                    attrs="{'invisible':['|','|','|',('state','!=','draft'),('object_id','=',False),('correction_type','not in',('rules','file')),('action_type','!=','update')]}"
+                                    placeholder="Add fields to show..."
+                                    options="{'no_create': True,'no_open':True}" invisible="1"/>
+                            <label for="order_by_field_id"
+                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('object_id','=',False),('correction_type','not in',('rules','file')),('apply_on','!=','record')]}"/>
+                            <div attrs="{'invisible':['|','|','|',('state','!=','draft'),('object_id','=',False),('correction_type','not in',('rules','file')),('apply_on','!=','record')]}">
+                                 <field name="order_by_field_id" options="{'no_create':True,'no_open':True}"
+                                        attrs="{'required':[('correction_type','in',('rules','file')),('apply_on','=','record')]}"/>
+                                 <field name="order_by_field" attrs="{'invisible':['|',('order_by_field_id','=',False),('apply_on','!=','record')]}"/>
+                            </div>
+                            <field name="order_by_orientation"
+                                   widget="radio"
+                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('object_id','=',False),('order_by_field','=',False),('correction_type','not in',('rules','file'))],'required':[('object_id','!=',False),('order_by_field','!=',False),('correction_type','in',('rules','file'))]}"/>
+                            <!-- correction_type = rules -->
+                            <field name="column_data_to_set_dt"
+                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','datetime'),('correction_type','!=','rules')],'required':[('field_to_correct_type','=','datetime'),('correction_type','=','rules'),('attr_type','=','field')]}"/>
+                            <field name="column_data_to_set_da"
+                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','date'),('correction_type','!=','rules')],'required':[('field_to_correct_type','=','date'),('correction_type','=','rules'),('attr_type','=','field')]}"/>
+                            <field name="column_data_to_set_mn"
+                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','monetary'),('correction_type','!=','rules')],'required':[('field_to_correct_type','=','monetary'),('correction_type','=','rules'),('attr_type','=','field')]}"/>
+                            <field name="column_data_to_set_fl"
+                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','float'),('correction_type','!=','rules')],'required':[('field_to_correct_type','=','float'),('correction_type','=','rules'),('attr_type','=','field')]}"/>
+                            <field name="column_data_to_set_in"
+                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','not in',('integer','many2one')),('correction_type','!=','rules')],'required':[('field_to_correct_type','in',('integer','many2one')),('correction_type','=','rules'),('attr_type','=','field')]}"
+                                   help="In the case of field of type object (many2one),0 will remove the content from field (set it to NULL)"/>
+                            <field name="column_data_to_set_bl"
+                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','boolean'),('correction_type','!=','rules')],'required':[('field_to_correct_type','=','boolean'),('correction_type','=','rules'),('attr_type','=','field')]}"/>
+                            <field name="column_data_to_set_ch"
+                                   help="For including variables in the string ,you have to put the field technical name like : {name},{date_order}...etc,you can using variables and constants in the same string ex : {name}-2019"
+                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','char'),('correction_type','!=','rules')],'required':[('field_to_correct_type','=','char'),('correction_type','=','rules'),('attr_type','=','field')]}"/>
+                            <field name="column_data_to_set_txt"
+                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','not in',('text','selection')),('correction_type','!=','rules')],'required':[('field_to_correct_type','in',('text','selection')),('correction_type','=','rules'),('attr_type','=','field')]}"/>
+                            <field name="column_data_to_set_htm"
+                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','html'),('correction_type','!=','rules')],'required':[('field_to_correct_type','=','html'),('correction_type','=','rules'),('attr_type','=','field')]}"/>
+                            <field name="apply_type" widget="radio"
+                                   attrs="{'invisible':['|',('state','!=','draft'),('correction_type','!=','rules')],'required':[('correction_type','=','rules')]}"/>
+                            <!-- end correction_type = rules-->
+                            <!-- correction_type = file -->
+                            <field name="data" filename="filename"
+                                   attrs="{'invisible':['|',('state','!=','draft'),('correction_type','!=','file')],'required':[('correction_type','=','file')]}"/>
+                            <field name="filename" invisible="1"/>
+                            <field name="column_data_to_replace"
+                                   attrs="{'invisible':['|','|',('state','!=','draft'),('correction_type','!=','file'),('data','=',False)],'required':[('correction_type','=','file')]}" />
+                            <field name="column_data_to_put"
+                                   attrs="{'invisible':['|','|',('state','!=','draft'),('correction_type','!=','file'),('data','=',False)],'required':[('correction_type','=','file')]}"/>
+                            <field name="order_by_column"
+                                attrs="{'invisible':['|','|',('state','!=','draft'),('correction_type','!=','file'),('data','=',False)],'required':[('correction_type','=','file')]}"/>
+                            <field name="order_by_position"
+                            attrs="{'invisible':['|','|',('state','!=','draft'),('correction_type','!=','file'),('data','=',False)],'required':[('correction_type','=','file')]}"/>
+                            <!-- end correction_type = file-->
+                            <field name="correction_line_ids_count" invisible="1"/>
+                            <field name="currency_id" invisible="1"/>
+                            <!--<field name="is_computed_field" invisible="1"/>-->
+                            <!--<field name="compute_method" invisible="1"/>-->
+                        </group>
+                        <field name="check_all"
+                               attrs="{'invisible':[('correction_line_ids_count','=',0)]}"
+                               style="margin-left:5px;"
+                        />
+                        <field name="total_selected_lines"
+                               nolabel="1"
+                               attrs="{'invisible':['|',('correction_line_ids_count','=',0),('data','=',False)]}"
+                               style="float:right;font-weight:bold;margin-right:10px;margin-top:10px;"
+                        />
+                        <notebook attrs="{'invisible':[('state','!=','draft')]}">
+                            <page name="correction_insert_element_ids"
+                                  string="Record's Data"
+                                  attrs="{'invisible':['|','|',('correction_type','!=','sql'),('sql_query_type','!=','insert'),('object_id','=',False)]}">
+                                <div style="margin-top:5px !important;margin-bottom:3px !important;">
+                                    <field name="ignore_empty_fields" class="oe_inline"/>
+                                    <label for="ignore_empty_fields"/>
+                                </div>
+                                <field name="correction_insert_element_ids_count" invisible="1"/>
+                                <field name="correction_insert_element_ids"
+                                       nolabel="1"
+                                       attrs="{'required':[('correction_type','=','sql'),('sql_query_type','=','insert'),('object_id','!=',False)]}">
+                                    <tree editable="bottom" create="0">
+                                        <field name="field_name" readonly="1"/>
+                                        <field name="field_type" invisible="1"/>
+                                        <field name="is_required" invisible="1"/>
+                                        <field name="field_data" attrs="{'required':[('is_required','=',True)]}"/>
+                                    </tree>
+                                </field>
+
+                            </page>
+                            <page name="correction_rule_ids"
+                                  string="Selection Rules"
+                                  attrs="{'invisible':['|',('apply_type','!=','some'),('apply_on','!=','record')]}">
+                                  <field name="correction_rule_ids"
+                                       nolabel="1">
+                                    <tree editable="bottom">
+                                        <field name="rule_type" required="1"/>
+                                        <field name="logic_operator"
+                                               attrs="{'invisible':[('rule_type','!=','operator')],'required':[('rule_type','=','operator')]}"/>
+                                        <field name="statement_field_id"
+                                               options="{'no_create':True,'no_open':True}"
+                                               attrs="{'invisible':[('rule_type','!=','statement')],'required':[('rule_type','=','statement')]}"/>
+                                        <field name="statement_operation"
+                                               attrs="{'invisible':[('rule_type','!=','statement')],'required':[('rule_type','=','statement')]}"/>
+                                        <field name="statement_value"
+                                               attrs="{'invisible':['|',('rule_type','!=','statement'),('statement_operation','in',('is NULL','is NOT NULL'))],'required':[('rule_type','=','statement'),('statement_operation','not in',('is NULL','is NOT NULL'))]}"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page name="correction_line_ids"
+                                  string="Detected database lines"
+                                  attrs="{'invisible':[('correction_line_ids_count','=',0)]}">
+                                <field name="correction_line_ids"
+                                       nolabel="1">
+                                    <tree create="0" editable="bottom">
+                                            <field name="action_type" invisible="1"/>
+                                            <field name="attr_type" invisible="1"/>
+                                            <field name="check"/>
+                                            <field name="id_found" readonly="1" />
+                                            <field name="field_data_found" readonly="1" attrs="{'invisible':[('action_type','!=','update')]}"/>
+                                            <field name="data_to_replace" readonly="1" attrs="{'invisible':[('action_type','!=','update')]}"/>
+                                            <field name="data_to_put" attrs="{'invisible':['|',('action_type','!=','update'),('attr_type','!=','field')]}"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="data_correction_view_tree" model="ir.ui.view">
+            <field name="name">Data Correction</field>
+            <field name="model">data.correction</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="correction_note"/>
+                    <field name="action_type"/>
+                    <field name="contact_id"/>
+                    <field name="correction_key"/>
+                    <field name="state" decoration-bf="state == 'draft'"
+                       decoration-success="state == 'done'"  decoration-danger="state == 'cancel'" widget="badge"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="data_correction_action" model="ir.actions.act_window">
+            <field name="name">Data correction action</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">data.correction</field>
+            <field name="context">{}</field>
+            <field name="view_id" ref="data_correction.data_correction_view_tree"/>
+        </record>
+
+        <menuitem id="menu_data_correction"
+                  name="Data correction"
+                  action="data_correction.data_correction_action"
+                  parent="data_correction_log.menu_data"
+                  sequence="5"
+                  groups="data_correction.group_data_correction_user"/>
+
+    </data>
+</openerp>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+<data noupdate="0">
+
+    <record model="ir.module.category" id="module_data_correction">
+        <field name="name">Data correction</field>
+        <field name="description">Helps you correct/update data out of the ordinary workflow.</field>
+        <field name="sequence">40</field>
+    </record>
+
+    <record id="group_data_correction_user" model="res.groups">
+        <field name="name">User</field>
+        <field name="category_id" ref="data_correction.module_data_correction"/>
+    </record>
+
+    <record id="group_data_correction_manager" model="res.groups">
+        <field name="name">Manager</field>
+        <field name="implied_ids" eval="[(4, ref('data_correction.group_data_correction_user')),
+        (4,ref('data_correction_log.group_data_update_log_undo'))]"/>
+        <field name="category_id" ref="data_correction.module_data_correction"/>
+    </record>
+
+
+</data>
+</openerp>
