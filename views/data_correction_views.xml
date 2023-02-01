@@ -125,8 +125,15 @@
                             <div
                                  attrs="{'invisible':['|','|','|','|',('state','!=','draft'),('object_id','=',False),('correction_type','not in',('rules','file')),('action_type','!=','update'),('attr_type','!=','field')]}">
                                  <field name="field_id" options="{'no_create':True,'no_open':True}" attrs="{'required':[('correction_type','in',('rules','file')),('action_type','=','update'),('attr_type','=','field')]}"/>
-                                 <field name="field_to_correct" attrs="{'invisible':[('field_id','=',False)]}"/>
+                                 <field name="field_to_correct" invisible="1"/>
                                  <field name="field_to_correct_type" invisible="1"/>
+                            </div>
+                            <label for="prevent_trigger_computed_fields" attrs="{'invisible':['|','|','|','|',('state','!=','draft'),('object_id','=',False),('correction_type','not in',('rules','file')),('action_type','!=','update'),('attr_type','!=','field')]}"/>
+                            <div name="prevent_trigger_computed_fields" attrs="{'invisible':['|','|','|','|',('state','!=','draft'),('object_id','=',False),('correction_type','not in',('rules','file')),('action_type','!=','update'),('attr_type','!=','field')]}">
+                                <field name="prevent_trigger_computed_fields" widget="boolean_toggle"/>
+                                 <div class="oe_grey">
+                                    Avoid triggering the calculation of dependent fields,use this at your own risk,you have to be aware about the impact of your modification if you check this option!
+                                </div>
                             </div>
                             <field name="fields_to_show" widget="many2many_tags"
                                     attrs="{'invisible':['|','|','|',('state','!=','draft'),('object_id','=',False),('correction_type','not in',('rules','file')),('action_type','!=','update')]}"

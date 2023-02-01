@@ -265,6 +265,8 @@ class DataCorrection(models.Model):
                               ('cancel', 'Cancelled')], default='draft', string='status')
     correction_ids_count = fields.Integer(compute='_compute_correction_ids_count')
     appended = fields.Boolean(default=False)
+    prevent_trigger_computed_fields = fields.Boolean(string='Avoid trigger dependent fields',
+                                                     default=False,help="Avoid triggering the calculation of dependent fields,use this at your own risk,you have to be aware about the impact of your modification if you check this option!")
 
     def unlink(self):
         for each in self:
@@ -811,14 +813,15 @@ class DataCorrection(models.Model):
                                 cr.execute(sql_query, params)
                                 # we have to recompute dependant computed fields ,
                                 # this can be made by the notification of the modified field
-                                record.modified([self.field_to_correct])
-                                for field_key, field_value in record._fields.items():
-                                    if field_value.type == 'many2one':
-                                        parent_record = getattr(record, field_key)
-                                        if parent_record:
-                                            # we have to detect the relationel field
-                                            try:
-                                                parent_field_to_unvalidate = next(parent_field_key
+                                if not self.prevent_trigger_computed_fields:
+                                    record.modified([self.field_to_correct])
+                                    for field_key, field_value in record._fields.items():
+                                        if field_value.type == 'many2one':
+                                            parent_record = getattr(record, field_key)
+                                            if parent_record:
+                                                # we have to detect the relationel field
+                                                try:
+                                                    parent_field_to_unvalidate = next(parent_field_key
                                                                                   for
                                                                                   parent_field_key, parent_field_value
                                                                                   in parent_record._fields.items()
@@ -826,10 +829,10 @@ class DataCorrection(models.Model):
                                                                                   parent_field_value.type == 'one2many' \
                                                                                   and parent_field_value.comodel_name == record._name \
                                                                                   and parent_field_value.inverse_name == field_key)
-                                            except StopIteration as si:
-                                                continue
-                                            else:
-                                                parent_record.modified([parent_field_to_unvalidate])
+                                                except StopIteration as si:
+                                                    continue
+                                                else:
+                                                    parent_record.modified([parent_field_to_unvalidate])
                                 # we have to save all the correction events in log
                                 #data.update({'field_to_correct': self.field_to_correct,
                                 #             'original_data': line.field_data_found or 'NULL',
