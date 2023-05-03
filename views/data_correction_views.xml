@@ -140,36 +140,52 @@
                                     placeholder="Add fields to show..."
                                     options="{'no_create': True,'no_open':True}" invisible="1"/>
                             <label for="order_by_field_id"
-                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('object_id','=',False),('correction_type','not in',('rules','file')),('apply_on','!=','record')]}"/>
+                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('object_id','=',False),('correction_type','not in',('rules','file')),('apply_on','!=','record')]}"
+                                   domain="[('model','=',object_to_correct),('store','=',True)]"/>
                             <div attrs="{'invisible':['|','|','|',('state','!=','draft'),('object_id','=',False),('correction_type','not in',('rules','file')),('apply_on','!=','record')]}">
                                  <field name="order_by_field_id" options="{'no_create':True,'no_open':True}"
-                                        attrs="{'required':[('correction_type','in',('rules','file')),('apply_on','=','record')]}"/>
+                                        attrs="{'required':[('correction_type','in',('rules','file')),('apply_on','=','record')]}"
+                                        domain="[('model','=',object_to_correct),('store','=',True)]"/>
                                  <field name="order_by_field" attrs="{'invisible':['|',('order_by_field_id','=',False),('apply_on','!=','record')]}"/>
                             </div>
                             <field name="order_by_orientation"
                                    widget="radio"
                                    attrs="{'invisible':['|','|','|',('state','!=','draft'),('object_id','=',False),('order_by_field','=',False),('correction_type','not in',('rules','file'))],'required':[('object_id','!=',False),('order_by_field','!=',False),('correction_type','in',('rules','file'))]}"/>
+                            <field name="data_as_variable"
+                                   widget="boolean_toggle"
+                                   attrs="{'invisible':['|','|',('state','!=','draft'),('attr_type','!=','field'),('correction_type','!=','rules')]}"/>
                             <!-- correction_type = rules -->
                             <field name="column_data_to_set_dt"
-                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','datetime'),('correction_type','!=','rules')],'required':[('field_to_correct_type','=','datetime'),('correction_type','=','rules'),('attr_type','=','field')]}"/>
+                                       attrs="{'invisible':['|','|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','datetime'),('correction_type','!=','rules'),('data_as_variable','=',True)],
+                                       'required':[('field_to_correct_type','=','datetime'),('correction_type','=','rules'),('attr_type','=','field'),('data_as_variable','=',False)]}"/>
                             <field name="column_data_to_set_da"
-                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','date'),('correction_type','!=','rules')],'required':[('field_to_correct_type','=','date'),('correction_type','=','rules'),('attr_type','=','field')]}"/>
+                                       attrs="{'invisible':['|','|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','date'),('correction_type','!=','rules'),('data_as_variable','=',True)]
+                                       ,'required':[('field_to_correct_type','=','date'),('correction_type','=','rules'),('attr_type','=','field'),('data_as_variable','=',False)]}"/>
                             <field name="column_data_to_set_mn"
-                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','monetary'),('correction_type','!=','rules')],'required':[('field_to_correct_type','=','monetary'),('correction_type','=','rules'),('attr_type','=','field')]}"/>
+                                       attrs="{'invisible':['|','|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','monetary'),('correction_type','!=','rules'),('data_as_variable','=',True)],
+                                       'required':[('field_to_correct_type','=','monetary'),('correction_type','=','rules'),('attr_type','=','field'),('data_as_variable','=',False)]}"/>
                             <field name="column_data_to_set_fl"
-                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','float'),('correction_type','!=','rules')],'required':[('field_to_correct_type','=','float'),('correction_type','=','rules'),('attr_type','=','field')]}"/>
+                                       attrs="{'invisible':['|','|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','float'),('correction_type','!=','rules'),('data_as_variable','=',True)],
+                                       'required':[('field_to_correct_type','=','float'),('correction_type','=','rules'),('attr_type','=','field'),('data_as_variable','=',False)]}"/>
                             <field name="column_data_to_set_in"
-                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','not in',('integer','many2one')),('correction_type','!=','rules')],'required':[('field_to_correct_type','in',('integer','many2one')),('correction_type','=','rules'),('attr_type','=','field')]}"
-                                   help="In the case of field of type object (many2one),0 will remove the content from field (set it to NULL)"/>
+                                       attrs="{'invisible':['|','|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','not in',('integer','many2one')),('correction_type','!=','rules'),('data_as_variable','=',True)],
+                                       'required':[('field_to_correct_type','in',('integer','many2one')),('correction_type','=','rules'),('attr_type','=','field'),('data_as_variable','=',False)]}"
+                                       help="In the case of field of type object (many2one),0 will remove the content from field (set it to NULL)"/>
                             <field name="column_data_to_set_bl"
-                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','boolean'),('correction_type','!=','rules')],'required':[('field_to_correct_type','=','boolean'),('correction_type','=','rules'),('attr_type','=','field')]}"/>
+                                       attrs="{'invisible':['|','|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','boolean'),('correction_type','!=','rules'),('data_as_variable','=',True)],
+                                       'required':[('field_to_correct_type','=','boolean'),('correction_type','=','rules'),('attr_type','=','field'),('data_as_variable','=',False)]}"/>
                             <field name="column_data_to_set_ch"
-                                   help="For including variables in the string ,you have to put the field technical name like : {name},{date_order}...etc,you can using variables and constants in the same string ex : {name}-2019"
-                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','char'),('correction_type','!=','rules')],'required':[('field_to_correct_type','=','char'),('correction_type','=','rules'),('attr_type','=','field')]}"/>
+                                       help="For including variables in the string ,you have to put the field technical name like : {name},{date_order}...etc,you can using variables and constants in the same string ex : {name}-2019"
+                                       attrs="{'invisible':['|','|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','char'),('correction_type','!=','rules'),('data_as_variable','=',True)],
+                                       'required':[('field_to_correct_type','=','char'),('correction_type','=','rules'),('attr_type','=','field'),('data_as_variable','=',False)]}"/>
                             <field name="column_data_to_set_txt"
-                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','not in',('text','selection')),('correction_type','!=','rules')],'required':[('field_to_correct_type','in',('text','selection')),('correction_type','=','rules'),('attr_type','=','field')]}"/>
+                                       attrs="{'invisible':['|','|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','not in',('text','selection')),('correction_type','!=','rules'),('data_as_variable','=',True)],
+                                       'required':[('field_to_correct_type','in',('text','selection')),('correction_type','=','rules'),('attr_type','=','field'),('data_as_variable','=',False)]}"/>
                             <field name="column_data_to_set_htm"
-                                   attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','html'),('correction_type','!=','rules')],'required':[('field_to_correct_type','=','html'),('correction_type','=','rules'),('attr_type','=','field')]}"/>
+                                       attrs="{'invisible':['|','|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','html'),('correction_type','!=','rules'),('data_as_variable','=',True)],
+                                       'required':[('field_to_correct_type','=','html'),('correction_type','=','rules'),('attr_type','=','field'),('data_as_variable','=',False)]}"/>
+                            <field name="column_data_to_set_var" attrs="{'invisible':['|','|','|',('state','!=','draft'),('attr_type','!=','field'),('correction_type','!=','rules'),('data_as_variable','=',False)],
+                                       'required':[('correction_type','=','rules'),('attr_type','=','field'),('data_as_variable','=',True)]}"/>
                             <field name="apply_type" widget="radio"
                                    attrs="{'invisible':['|',('state','!=','draft'),('correction_type','!=','rules')],'required':[('correction_type','=','rules')]}"/>
                             <!-- end correction_type = rules-->
@@ -232,7 +248,8 @@
                                                attrs="{'invisible':[('rule_type','!=','operator')],'required':[('rule_type','=','operator')]}"/>
                                         <field name="statement_field_id"
                                                options="{'no_create':True,'no_open':True}"
-                                               attrs="{'invisible':[('rule_type','!=','statement')],'required':[('rule_type','=','statement')]}"/>
+                                               attrs="{'invisible':[('rule_type','!=','statement')],'required':[('rule_type','=','statement')]}"
+                                               domain="[('model','=',parent.object_to_correct),('store','=',True)]"/>
                                         <field name="statement_operation"
                                                attrs="{'invisible':[('rule_type','!=','statement')],'required':[('rule_type','=','statement')]}"/>
                                         <field name="statement_value"

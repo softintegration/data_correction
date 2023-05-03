@@ -71,19 +71,30 @@ RULE_OPERATIONS = ONE_STATEMENT_OPERATIONS + TWO_STATEMENT_OPERATIONS
 
 RULE_LOGIN_OPERATION = [('OR', 'OR'),
                         ('AND', 'AND')]
+INTEGER_COL = 'column_data_to_set_in'
+CHAR_COL = 'column_data_to_set_ch'
+BOOLEAN_COL = 'column_data_to_set_bl'
+TEXT_COL = 'column_data_to_set_txt'
+FLOAT_COL = 'column_data_to_set_fl'
+MONETARY_COL = 'column_data_to_set_mn'
+DATE_COL = 'column_data_to_set_da'
+DATETIME_COL = 'column_data_to_set_dt'
+HTML_COL = 'column_data_to_set_htm'
+VARIABLE_COL = 'column_data_to_set_var'
 
 TYPE_ATTRBUTE_MAPPING = {
-    'many2one': 'column_data_to_set_in',
-    'char': 'column_data_to_set_ch',
-    'integer': 'column_data_to_set_in',
-    'boolean': 'column_data_to_set_bl',
-    'selection': 'column_data_to_set_txt',
-    'float': 'column_data_to_set_fl',
-    'text': 'column_data_to_set_txt',
-    'monetary': 'column_data_to_set_mn',
-    'date': 'column_data_to_set_da',
-    'datetime': 'column_data_to_set_dt',
-    'html': 'column_data_to_set_htm',
+    'many2one': INTEGER_COL,
+    'char': CHAR_COL,
+    'integer': INTEGER_COL,
+    'boolean': BOOLEAN_COL,
+    'selection': TEXT_COL,
+    'float': FLOAT_COL,
+    'text': TEXT_COL,
+    'monetary': MONETARY_COL,
+    'date': DATE_COL,
+    'datetime': DATETIME_COL,
+    'html': HTML_COL,
+    'variable':VARIABLE_COL
 }
 
 VARIABLE_OPEN = '{'
@@ -244,6 +255,9 @@ class DataCorrection(models.Model):
     column_data_to_set_ch = fields.Char(string='Data to set',states={'draft': [('readonly', False)]}, readonly=True)
     column_data_to_set_txt = fields.Text(string='Data to set',states={'draft': [('readonly', False)]}, readonly=True)
     column_data_to_set_htm = fields.Html(string='Data to set',states={'draft': [('readonly', False)]}, readonly=True)
+    column_data_to_set_var = fields.Char(string='Data to set',states={'draft': [('readonly', False)]}, readonly=True)
+    data_as_variable = fields.Boolean(string="Data as variable",default=False,
+                                      help="Check this if you want that data to set to be processed as variable not fixed value")
     apply_on = fields.Selection(APPLY_ON_SELECT, string='Apply on', default='record', required=True,states={'draft': [('readonly', False)]}, readonly=True)
     apply_type = fields.Selection(APPLY_TYPE_SELECT, string='Apply type', default='some',states={'draft': [('readonly', False)]}, readonly=True)
     correction_rule_ids = fields.One2many('data.correction.rule', 'correction_id',states={'draft': [('readonly', False)]}, readonly=True)
@@ -417,11 +431,14 @@ class DataCorrection(models.Model):
     def _get_object_to_correct(self):
         self.object_to_correct = self.object_id and self.object_id.model or False
 
-    @api.depends('attr_type', 'field_id', 'function_field_id')
+    @api.depends('attr_type', 'field_id','data_as_variable','function_field_id')
     def _get_field_to_correct(self):
         if self.attr_type == 'field':
             self.field_to_correct = self.field_id and self.field_id.name or False
-            self.field_to_correct_type = self.field_id and self.field_id.ttype or False
+            if not self.data_as_variable:
+                self.field_to_correct_type = self.field_id and self.field_id.ttype or False
+            else:
+                self.field_to_correct_type = 'variable'
         elif self.attr_type == 'function':
             self.field_to_correct = self.function_field_id and self.function_field_id.name or False
             self.field_to_correct_type = self.function_field_id and self.function_field_id.ttype or False
@@ -465,12 +482,15 @@ class DataCorrection(models.Model):
             field_to_correct = self.env[self.object_to_correct]._fields.get(self.field_to_correct,False)
             if not field_to_correct.store:
                 raise ValidationError(_("The field %s is not stored field in database,can not update non stored field")%field_to_correct.name)
+            else:
+                raise ValidationError(e)
         except Exception as e:
                 raise ValidationError(e)
         list_found = cr.dictfetchall()
+        data_as_variable = False
         if this.action_type == 'update':
             if self.attr_type == 'field':
-                data_to_put = this._get_data_to_put()
+                data_to_put,data_as_variable = this._get_data_to_put()
             else:
                 data_to_put = "/"
         else:
@@ -482,8 +502,8 @@ class DataCorrection(models.Model):
                 'id_found': row.get('id'),
                 'field_data_found': row.get(self.field_to_correct),
                 'data_to_replace': row.get(self.field_to_correct),
-                'data_to_put': data_to_put,
-                'check': True
+                'data_to_put': self._parse_data(data_to_put,data_as_variable,row.get('id')),
+                'check': True,
             }
             lines.append(line)
         return lines
@@ -493,17 +513,35 @@ class DataCorrection(models.Model):
         we have to get it dynamically because we have many types of data : many2one,float date,datetime...
         """
         self.ensure_one()
+        variable_data = False
         if not self.user_has_groups('data_correction.group_data_correction_manager'):
             raise UserError(_("You are not authorised to do this action!"))
         try:
             data_to_put_attribute = TYPE_ATTRBUTE_MAPPING[self.field_to_correct_type]
             data_to_put = getattr(self, data_to_put_attribute)
+            if data_to_put_attribute == VARIABLE_COL:
+                variable_data = True
         except KeyError as ke:
             raise UserError(
                 _('Attribute to get data from not found in correction for type <{}>!'.format(
                     self.field_to_correct_type)))
         else:
+            return (data_to_put,variable_data)
+
+    def _parse_data(self,data_to_put,data_as_variable,record_id):
+        if not data_as_variable:
             return data_to_put
+        record = self.env[self.object_to_correct].browse(record_id)
+        data_to_put_list = data_to_put.split(".")
+        while data_to_put_list:
+            try:
+                field = data_to_put_list.pop(0)
+                record = getattr(record,field)
+            except AttributeError as ae:
+                raise UserError(ae)
+        data_to_put = record
+        return data_to_put
+
 
     def _build_sql_query(self, type):
         """ Build the appropriate SQL query according to the fields of this
@@ -687,7 +725,7 @@ class DataCorrection(models.Model):
                 continue
         return True
 
-    @api.model
+    """@api.model
     def _parse_data(self, data, record):
         if not _is_variable(data):
             return data
@@ -703,6 +741,7 @@ class DataCorrection(models.Model):
                 data = data.replace("{%s}" % field_name_var, "%s")
         data = data % tuple(values)
         return data
+    """
 
     def apply_correction(self):
         """ Apply the correction to database
@@ -1187,6 +1226,8 @@ class DataCorrectionLine(models.TransientModel):
     field_data_found = fields.Char('Data found')
     data_to_replace = fields.Char(string='Data to replace')
     data_to_put = fields.Char(string='Data to put')
+    data_as_variable = fields.Boolean(string="Data as variable", default=False,
+                                      help="Check this if you want that data to set to be processed as variable not fixed value")
 
 
 class DataCorrectionRule(models.TransientModel):
