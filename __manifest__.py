@@ -10,7 +10,7 @@
     'qweb': [],
     'description': False,
     'images': [],
-    'version': '1.0.2.1',
+    'version': '1.0.2.2',
     'category': 'Technical tools',
     'demo': [],
     'depends': ['data_correction_log','portal'],

@@ -193,6 +193,7 @@ TYPE_INSERT_TYPE_MAPPING = {
 
 class DataCorrection(models.Model):
     _name = "data.correction"
+    _description = 'Data correction'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _rec_name = 'correction_note'
 
