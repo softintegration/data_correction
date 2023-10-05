@@ -66,6 +66,7 @@
                         <group>
                             <field name="appended" invisible="1"/>
                             <field name="correction_class" invisible="1"/>
+                            <field name="create_date" string="Correction date"/>
                             <label for="correction_key" attrs="{'invisible':[('correction_class','=','append')]}"/>
                             <div class="oe_inline" attrs="{'invisible':[('correction_class','=','append')]}">
                                 <field name="correction_key_print" readonly="1"/>
