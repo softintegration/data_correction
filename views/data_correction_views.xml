@@ -173,6 +173,7 @@
                                        'required':[('field_to_correct_type','in',('integer','many2one')),('correction_type','=','rules'),('attr_type','=','field'),('data_as_variable','=',False)]}"
                                        help="In the case of field of type object (many2one),0 will remove the content from field (set it to NULL)"/>
                             <field name="column_data_to_set_bl"
+                                         widget="boolean_toggle"
                                        attrs="{'invisible':['|','|','|','|',('state','!=','draft'),('attr_type','!=','field'),('field_to_correct_type','!=','boolean'),('correction_type','!=','rules'),('data_as_variable','=',True)],
                                        'required':[('field_to_correct_type','=','boolean'),('correction_type','=','rules'),('attr_type','=','field'),('data_as_variable','=',False)]}"/>
                             <field name="column_data_to_set_ch"

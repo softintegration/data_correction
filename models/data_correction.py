@@ -496,13 +496,19 @@ class DataCorrection(models.Model):
                 data_to_put = "/"
         else:
             data_to_put = False
+        data_to_put_attribute = TYPE_ATTRBUTE_MAPPING[this.field_to_correct_type]
         for row in list_found:
+            # Boolean fields must be converted to string to prevent a bad interpretation
+            if data_to_put_attribute == BOOLEAN_COL:
+                field_data_found = row.get(self.field_to_correct) and 'True' or 'False'
+            else:
+                field_data_found = row.get(self.field_to_correct)
             line = {
                 'action_type': self.action_type,
                 'attr_type': self.attr_type,
                 'id_found': row.get('id'),
-                'field_data_found': row.get(self.field_to_correct),
-                'data_to_replace': row.get(self.field_to_correct),
+                'field_data_found': field_data_found,
+                'data_to_replace': field_data_found,
                 'data_to_put': self._parse_data(data_to_put,data_as_variable,row.get('id')),
                 'check': True,
             }
@@ -520,6 +526,9 @@ class DataCorrection(models.Model):
         try:
             data_to_put_attribute = TYPE_ATTRBUTE_MAPPING[self.field_to_correct_type]
             data_to_put = getattr(self, data_to_put_attribute)
+            # Boolean value has special behaviour so we have to change it to string
+            if data_to_put_attribute == BOOLEAN_COL:
+                data_to_put = data_to_put and 'True' or 'False'
             if data_to_put_attribute == VARIABLE_COL:
                 variable_data = True
         except KeyError as ke:
